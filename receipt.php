@@ -39,6 +39,17 @@ if (empty($paymentMethod)) {
 
 include("peakscinemas_database.php");
 
+$customerEmail = '';
+// Fetch customer email for sending receipt
+$customer_stmt = $conn->prepare("SELECT Email FROM customer WHERE Customer_ID = ?");
+$customer_stmt->bind_param("i", $Customer_ID);
+$customer_stmt->execute();
+$customerResult = $customer_stmt->get_result();
+if ($customerResult && $customerResult->num_rows > 0) {
+    $customerRow = $customerResult->fetch_assoc();
+    $customerEmail = $customerRow['Email'];
+}
+
 $movie_stmt = $conn->prepare("SELECT * FROM movie WHERE Movie_ID = ?");
 $movie_stmt->bind_param("i", $Movie_ID);
 $movie_stmt->execute();
@@ -110,15 +121,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $payment_stmt = $conn -> prepare("INSERT INTO payment(Ticket_ID, PaymentMethod, AmountPaid, PaymentDate, PaymentStatus)
                                         VALUES (?, ?, ?, ?, ?)");    
 
-        $receipt_stmt = $conn -> prepare("INSERT INTO `e-receipt`(Payment_ID, DateIssued, ReceiptStatus, Status)
-                                        VALUES (?, ?, ?, ?)");
+        // e-receipt table uses column name PaymentID (without underscore) and requires SentToEmail and DateIssued (DATE)
+        $receipt_stmt = $conn -> prepare("INSERT INTO `e-receipt`(PaymentID, DateIssued, SentToEmail, ReceiptStatus, Status)
+                                        VALUES (?, ?, ?, ?, ?)");
 
         foreach ($ticketIDs as $Ticket_ID) {
             $payment_stmt -> bind_param("isdsi", $Ticket_ID, $paymentMethod, $price, $dateTime, $Status);
             $payment_stmt -> execute();
             $Payment_ID = $conn -> insert_id;
 
-            $receipt_stmt -> bind_param("isii", $Payment_ID, $dateTime, $Status, $Status);
+            // Use only the date part for DateIssued column
+            $dateIssued = date('Y-m-d', strtotime($dateTime));
+            $receipt_stmt -> bind_param("issii", $Payment_ID, $dateIssued, $customerEmail, $Status, $Status);
             $receipt_stmt -> execute();
         }
 
