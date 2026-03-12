@@ -8,7 +8,18 @@ $TimeSlot_ID = isset($_POST['timeslot_id']) ? $_POST['timeslot_id'] : '';
 $selectedSeats = isset($_POST['selectedSeats']) ? $_POST['selectedSeats'] : [];
 $totalPrice = isset($_POST['totalPrice']) ? $_POST['totalPrice'] : 0;
 $paymentMethod = isset($_POST['paymentMethod']) ? $_POST['paymentMethod'] : '';
-$Customer_ID = $_SESSION['user_id'];
+
+// Ensure we have a valid logged-in customer before proceeding
+if (isset($_SESSION['user_id'])) {
+    $Customer_ID = $_SESSION['user_id'];
+} elseif (isset($_SESSION['Customer_ID'])) {
+    // Fallback in case a different session key is used elsewhere
+    $Customer_ID = $_SESSION['Customer_ID'];
+} else {
+    // No user information in the session – force login and stop executing the script
+    header("Location: login.php");
+    exit;
+}
 
 $customerName = '';
 if ($paymentMethod === 'credit') {
