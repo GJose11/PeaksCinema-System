@@ -144,7 +144,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.82rem;
+      font-size: 20px;
       font-weight: 800;
       color: #fff;
       letter-spacing: 0.5px;

@@ -133,7 +133,7 @@
             width: 100%; height: 100%; border-radius: 50%;
             background: linear-gradient(135deg, #ff4d4d, #c0392b);
             display: flex; align-items: center; justify-content: center;
-            font-size: 0.82rem; font-weight: 800; color: #fff;
+            font-size: 20px; font-weight: 800; color: #fff;
             letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
         }
 
