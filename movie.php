@@ -287,6 +287,8 @@
         .hero-trailer-btn:hover {
             background: rgba(255,77,77,0.8);
             border-color: #ff4d4d;
+            transform: scale(1.03);
+            box-shadow: 0 0 18px rgba(255, 75, 75, 0.6);
         }
 
         /* ── Centered Play Button Overlay ── */
@@ -345,7 +347,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(10, 10, 10, 0.88);
+            background: rgba(8, 8, 8, 0.92);
         }
 
         .main-content {

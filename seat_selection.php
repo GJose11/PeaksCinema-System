@@ -72,6 +72,13 @@ if ($seatLayout) {
         .profile-btn{background-color:#F9F9F9;border:none;border-radius:50%;width:45px;height:45px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s ease;box-shadow:0 2px 4px rgba(0,0,0,0.2);overflow:hidden;padding:0;font-size:1.2rem;}
         .profile-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
         .profile-btn:hover{transform:scale(1.1);box-shadow:0 0 12px rgba(255,255,255,0.3);}
+        .profile-initials {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4d4d, #c0392b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 800; color: #fff;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
+        }
         main{margin:30px auto;width:95%;max-width:1100px;display:flex;flex-direction:column;gap:20px}
         .panel{backdrop-filter:blur(2px);background-color:rgba(0,0,0,0.4);border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.6);padding:20px 15px;overflow:hidden}
         h2{font-size:1rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#F9F9F9;margin-bottom:18px}

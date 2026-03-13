@@ -144,7 +144,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.82rem;
+      font-size: 20px;
       font-weight: 800;
       color: #fff;
       letter-spacing: 0.5px;
@@ -333,6 +333,8 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     .trailer-btn:hover {
       background: #cc0000;
       border-color: #cc0000;
+      transform: scale(1.05);
+      box-shadow: 0 0 18px rgba(255, 75, 75, 0.6)
     }
 
     /* ── Trailer Modal ── */

@@ -301,7 +301,7 @@ input[type="submit"]:hover {
     background-color: #ff3333;
     transform: scale(1.03);
     box-shadow: 0 0 18px rgba(255, 75, 75, 0.6);
-}
+} 
 
 .message {
     margin-bottom: 20px;
