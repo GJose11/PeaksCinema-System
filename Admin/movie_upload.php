@@ -159,6 +159,7 @@
     <nav>
         <a href="dashboard.php">Dashboard</a>
         <a href="malls_selection_admin.php">Malls</a>
+        <a href="malls_selection_admin.php">➕ Add Screenings</a>
         <a href="movie_upload.php" class="active">Movie Upload</a>
         <a href="theater_upload.php">Theater Upload</a>
         <a href="mall_upload.php">Mall Upload</a>
