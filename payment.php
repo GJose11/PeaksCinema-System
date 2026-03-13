@@ -98,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<<<<<<< HEAD
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -318,6 +319,65 @@ input[type="submit"]:hover {
     }
 }
 </style>
+=======
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: url("movie-background-collage.jpg") no-repeat center center fixed; background-size: cover; color: #F9F9F9; padding-top: 100px; padding-bottom: 40px; min-height: 100vh; }
+        header { background-color: #1C1C1C; display: flex; justify-content: space-between; align-items: center; padding: 10px 30px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; }
+        .logo img { height: 50px; cursor: pointer; filter: invert(1); transition: transform 0.2s ease; }
+        .logo img:hover { transform: scale(1.05); }
+        .profile-btn { background-color: #F9F9F9; border: none; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); overflow: hidden; padding: 0; font-size: 1.2rem; }
+        .profile-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-initials {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4d4d, #c0392b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; font-weight: 800; color: #fff;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
+        }
+        main { margin: 30px auto; width: 85%; max-width: 1000px; display: flex; flex-direction: column; gap: 12px; }
+        .panel { backdrop-filter: blur(2px); background-color: rgba(0,0,0,0.4); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); padding: 8px 20px; }
+        .summary-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .summary-bar .summary-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #F9F9F9; margin-bottom: 2px; }
+        .summary-bar .summary-value { font-size: 0.8rem; font-weight: 700; color: #F9F9F9; }
+        .summary-divider { width: 1px; height: 24px; background: rgba(249,249,249,0.15); }
+        h2 { font-size: 1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #F9F9F9; margin-bottom: 16px; }
+        .payment-methods { display: flex; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+        .payment-option { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid rgba(249,249,249,0.15); border-radius: 6px; cursor: pointer; transition: border-color 0.2s, background 0.2s; background: rgba(249,249,249,0.04); flex: 1; min-width: 140px; }
+        .payment-option:hover { border-color: rgba(249,249,249,0.4); background: rgba(249,249,249,0.08); }
+        .payment-option.selected { border-color: #ff4d4d; background: rgba(255,77,77,0.08); }
+        .payment-option input[type="radio"] { accent-color: #ff4d4d; width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; }
+        .payment-logo { width: 34px; height: 22px; object-fit: contain; background: #fff; padding: 2px 4px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.1); flex-shrink: 0; }
+        .payment-label { font-size: 0.78rem; font-weight: 500; color: #F9F9F9; flex: 1; cursor: pointer; }
+        .payment-details { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(249,249,249,0.1); }
+        .payment-details.active { display: block; }
+        .payment-details p { font-size: 0.8rem; color: rgba(249,249,249,0.5); text-align: left; margin-top: 8px; }
+        .form-row { display: flex; gap: 10px; }
+        .form-group { flex: 1; margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #F9F9F9; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 9px 12px; border-radius: 7px; border: 1px solid rgba(249,249,249,0.2); background: #1C1C1C; color: #F9F9F9; font-family: 'Outfit', sans-serif; font-size: 0.85rem; transition: border-color 0.2s; outline: none; }
+        .form-group input::placeholder { color: rgba(249,249,249,0.25); }
+        .form-group input:-webkit-autofill, .form-group input:-webkit-autofill:hover, .form-group input:-webkit-autofill:focus, .form-group input:-webkit-autofill:active { -webkit-text-fill-color: #F9F9F9 !important; -webkit-box-shadow: 0 0 0px 1000px rgba(0,0,0,0.2) inset !important; transition: background-color 5000s ease-in-out 0s; caret-color: #F9F9F9; }
+        .form-group input:focus { border-color: rgba(249,249,249,0.5); }
+        .form-group input.valid { border-color: #4caf50; background: rgba(0,0,0,0.2); }
+        .form-group input.invalid { border-color: #ff4d4d; background: rgba(255,77,77,0.08); }
+        .error-message { color: #ff4d4d; font-size: 0.7rem; margin-top: 4px; display: none; }
+        .validation-status { display: none; padding: 8px 12px; border-radius: 7px; font-size: 0.8rem; margin-top: 12px; }
+        .validation-status.valid { background: rgba(76,175,80,0.12); border: 1px solid rgba(76,175,80,0.3); color: #81c784; }
+        .validation-status.invalid { background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.3); color: #ff6b6b; }
+        .submit-row { display: flex; justify-content: flex-end; margin-top: 10px; }
+        button[type="submit"] { padding: 9px 26px; border-radius: 8px; border: none; background-color: #ff4d4d; color: #fff; font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background 0.2s ease, transform 0.15s ease; white-space: nowrap; }
+        button[type="submit"]:hover { background-color: #ff4d4d; transform: scale(1.02); }
+        button[type="submit"]:disabled { background-color: rgba(249,249,249,0.12); color: rgba(249,249,249,0.3); cursor: not-allowed; transform: none; }
+    </style>
+>>>>>>> a8750aa6e3cdb443a525692cb99b678114bb862e
 </head>
 <body>
 <header>

@@ -24,7 +24,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $profile_link = "profile_edit.php";
-$profile_photo = $_SESSION['profile_photo'] ?? null;
 
 // Fetch user data
 $stmt = $conn->prepare("SELECT Name, Email, PhoneNumber, Password, ProfilePhoto FROM customer WHERE Customer_ID = ?");
@@ -40,10 +39,12 @@ if ($result->num_rows === 0) {
 }
 
 $user = $result->fetch_assoc();
-if (!empty($user['ProfilePhoto'])) {
-    $profile_photo = $user['ProfilePhoto'];
-    $_SESSION['profile_photo'] = $profile_photo;
-}
+
+// Generate initials from Name
+$profile_photo = $user['ProfilePhoto'] ?? $_SESSION['profile_photo'] ?? null;
+$nameParts     = explode(' ', trim($user['Name'] ?? ''));
+$user_initials = strtoupper(substr($nameParts[0]??'',0,1) . substr(end($nameParts)??'',0,1));
+if (strlen($user_initials) === 1) $user_initials = strtoupper(substr($nameParts[0]??'',0,2));
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -160,30 +161,30 @@ header {
     align-items: center;
 }
 .profile-btn {
-    background-color: transparent;
-    border: 1px solid rgba(255,255,255,0.1);
+    background-color: #F9F9F9;
+    border: none;
     border-radius: 50%;
     width: 45px; height: 45px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     font-size: 1.2rem;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    overflow: hidden;
-    padding: 0;
 }
+.profile-btn {
+    background: transparent;
+}
+.profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
 .profile-btn img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    display: block;
+    width: 100%; height: 100%;
+    object-fit: cover; border-radius: 50%;
 }
-.profile-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 12px rgba(255,255,255,0.3);
+.profile-initials {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: linear-gradient(135deg, #ff4d4d, #c0392b);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.82rem; font-weight: 800; color: #fff;
+    letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
 }
-
 .logout-btn {
     background-color: #ff4b4b;
     color: #F9F9F9;
@@ -327,8 +328,10 @@ input[type="submit"]:hover {
         <button class="profile-btn" onclick="window.location.href='<?= $profile_link ?>'" title="Profile">
             <?php if (!empty($profile_photo)): ?>
                 <img src="<?= htmlspecialchars($profile_photo) ?>" alt="Profile" referrerpolicy="no-referrer">
+            <?php elseif (!empty($user_initials)): ?>
+                <div class="profile-initials"><?= htmlspecialchars($user_initials) ?></div>
             <?php else: ?>
-                👤
+                <div class="profile-initials">?</div>
             <?php endif; ?>
         </button>
         <a href="?logout=1"><button class="logout-btn">Logout</button></a>
