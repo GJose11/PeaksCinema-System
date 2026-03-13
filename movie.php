@@ -89,11 +89,20 @@
             justify-content: space-between;
             align-items: center;
             padding: 10px 30px;
-            position: sticky;
+            position: fixed;
             top: 0;
+            left: 0;
+            width: 100%;
             z-index: 1000;
             box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
         }
+        header.header-hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+        /* Push body down since header is now fixed */
+        body { padding-top: 70px; }
 
         .logo img {
             height: 50px;
@@ -104,24 +113,14 @@
         .logo img:hover { transform: scale(1.05); }
 
         .profile-btn {
-            background-color: transparent;
-            border: 1px solid rgba(255,255,255,0.1);
+            background-color: #F9F9F9;
+            border: none;
             border-radius: 50%;
             width: 45px; height: 45px;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer;
             font-size: 1.2rem;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            overflow: hidden;
-            padding: 0;
-        }
-
-        .profile-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
         }
         .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
 
@@ -333,7 +332,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: rgba(8, 8, 8, 0.92);
+            background: rgba(10, 10, 10, 0.88);
         }
 
         .main-content {
@@ -769,8 +768,8 @@
                 <?php endif; ?>
             </div>
             <?php if (!empty($movieDetails['TrailerURL'])): ?>
-            <button class="hero-trailer-btn" onclick="playTrailer('<?= htmlspecialchars($movieDetails['TrailerURL']) ?>')">
-                ▶ &nbsp;Watch Trailer
+            <button class="hero-trailer-btn" onclick="scrollToShowtimes()">
+                🎭 &nbsp;View Showtimes
             </button>
             <?php endif; ?>
         </div>
@@ -812,7 +811,7 @@
 </div><!-- end main-content-wrapper -->
 
 <!-- ── Schedule Section ── -->
-<div class="schedule-wrapper">
+<div class="schedule-wrapper" id="showtimes-section">
 <div class="schedule-inner">
     <p class="schedule-title">🎬 Choose Your Showtime</p>
 
@@ -936,6 +935,41 @@
     });
 
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTrailer(); });
+
+    // ── Scroll to showtimes ──
+    function scrollToShowtimes() {
+        const el = document.getElementById('showtimes-section');
+        if (el) {
+            const headerH = document.querySelector('header')?.offsetHeight || 70;
+            const top = el.getBoundingClientRect().top + window.scrollY - headerH;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
+    }
+
+    // ── Hide header on scroll down, show on scroll up ──
+    (function() {
+        const header = document.querySelector('header');
+        let lastY    = window.scrollY;
+        let ticking  = false;
+
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(function() {
+                    const currentY = window.scrollY;
+                    if (currentY > lastY && currentY > 80) {
+                        // Scrolling DOWN — hide
+                        header.classList.add('header-hidden');
+                    } else {
+                        // Scrolling UP — show
+                        header.classList.remove('header-hidden');
+                    }
+                    lastY = currentY;
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    })();
 </script>
 </body>
 </html>

@@ -62,11 +62,14 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       justify-content: space-between;
       align-items: center;
       padding: 10px 30px;
-      position: sticky;
-      top: 0;
+      position: fixed;
+      top: 0; left: 0; width: 100%;
       z-index: 1000;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
     }
+    header.header-hidden { transform: translateY(-100%); opacity: 0; }
+    body { padding-top: 70px; }
 
     .logo img {
       height: 50px;
@@ -105,8 +108,8 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     }
 
     .profile-btn {
-      background-color: transparent;
-      border: 1px solid rgba(255,255,255,0.1);
+      background-color: #F9F9F9;
+      border: none;
       border-radius: 50%;
       width: 45px; height: 45px;
       display: flex; align-items: center; justify-content: center;
@@ -305,9 +308,8 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     }
 
     .trailer-btn:hover {
-      background-color: #ff3333;
-      transform: scale(1.03);
-      box-shadow: 0 0 18px rgba(255, 75, 75, 0.6);
+      background: #cc0000;
+      border-color: #cc0000;
     }
 
     /* ── Trailer Modal ── */
@@ -533,6 +535,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
   <footer>
     <h2>About Us</h2>
     <p>Welcome to <strong>Peak'sCinemas</strong>, where Peak Movies meet Peak Experiences. Immerse yourself in the ultimate cinematic journey with state-of-the-art visuals and sound.</p>
+
   </footer>
 
   <script>
@@ -632,5 +635,30 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       }
     });
   </script>
+<script>
+    // ── Hide header on scroll down, show on scroll up ──
+    (function() {
+        const header = document.querySelector('header');
+        let lastY = window.scrollY, ticking = false;
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                requestAnimationFrame(function() {
+                    const currentY = window.scrollY;
+                    if (currentY > lastY && currentY > 80) header.classList.add('header-hidden');
+                    else header.classList.remove('header-hidden');
+                    lastY = currentY; ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+    })();
+
+    // Secret admin access: Ctrl + Shift + A
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+            window.location.href = 'Admin/admin_login.php';
+        }
+    });
+</script>
 </body>
 </html>

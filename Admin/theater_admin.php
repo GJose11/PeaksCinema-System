@@ -4,38 +4,46 @@ include("../peakscinemas_database.php");
 $Mall_ID    = filter_input(INPUT_GET, 'mall_id',    FILTER_VALIDATE_INT);
 $Theater_ID = filter_input(INPUT_GET, 'theater_id', FILTER_VALIDATE_INT);
 
+// Redirect back to mall selection if no IDs provided
+if (!$Mall_ID || !$Theater_ID) {
+    header("Location: malls_selection_admin.php");
+    exit;
+}
+
 $movie_search = $conn->query("SELECT Movie_ID, MovieName FROM movie ORDER BY MovieName ASC");
 
-if ($Mall_ID && $Theater_ID) {
-    $stmt = $conn->prepare("SELECT * FROM mall WHERE Mall_ID = ?");
-    $stmt->bind_param("i", $Mall_ID); $stmt->execute();
-    $mallDetails = ($stmt->get_result())->fetch_assoc();
+// Initialize with defaults so HTML never gets undefined variable warnings
+$mallDetails        = [];
+$theaterDetails     = [];
+$layoutProper       = [];
+$existingScreenings = null;
 
-    $theater_stmt = $conn->prepare("SELECT * FROM theater WHERE Theater_ID = ?");
-    $theater_stmt->bind_param("i", $Theater_ID); $theater_stmt->execute();
-    $theaterDetails = $theater_stmt->get_result()->fetch_assoc();
+$stmt = $conn->prepare("SELECT * FROM mall WHERE Mall_ID = ?");
+$stmt->bind_param("i", $Mall_ID); $stmt->execute();
+$mallDetails = $stmt->get_result()->fetch_assoc() ?? [];
 
-    $seats_stmt = $conn->prepare("SELECT * FROM seats WHERE Theater_ID = ? AND TimeSlot_ID IS NULL");
-    $seats_stmt->bind_param("i", $Theater_ID); $seats_stmt->execute();
-    $seatLayout = $seats_stmt->get_result();
-    $layoutProper = [];
-    if ($seatLayout) {
-        while ($seat = $seatLayout->fetch_assoc()) {
-            $layoutProper[$seat['SeatRow']][] = $seat;
-        }
-    }
+$theater_stmt = $conn->prepare("SELECT * FROM theater WHERE Theater_ID = ?");
+$theater_stmt->bind_param("i", $Theater_ID); $theater_stmt->execute();
+$theaterDetails = $theater_stmt->get_result()->fetch_assoc() ?? [];
 
-    // Fetch existing screenings for this theater
-    $screenings_stmt = $conn->prepare("
-        SELECT t.TimeSlot_ID, t.Date, t.StartTime, t.ScreeningType, m.MovieName
-        FROM timeslot t
-        JOIN movie m ON t.Movie_ID = m.Movie_ID
-        WHERE t.Theater_ID = ?
-        ORDER BY t.Date DESC, t.StartTime ASC
-    ");
-    $screenings_stmt->bind_param("i", $Theater_ID); $screenings_stmt->execute();
-    $existingScreenings = $screenings_stmt->get_result();
+// Seat layout (base seats not assigned to any timeslot)
+$seats_stmt = $conn->prepare("SELECT * FROM seats WHERE Theater_ID = ? AND TimeSlot_ID IS NULL ORDER BY SeatRow ASC, SeatColumn ASC");
+$seats_stmt->bind_param("i", $Theater_ID); $seats_stmt->execute();
+$seatLayout = $seats_stmt->get_result();
+while ($seat = $seatLayout->fetch_assoc()) {
+    $layoutProper[$seat['SeatRow']][] = $seat;
 }
+
+// Fetch existing screenings for this theater
+$screenings_stmt = $conn->prepare("
+    SELECT t.TimeSlot_ID, t.Date, t.StartTime, t.ScreeningType, m.MovieName
+    FROM timeslot t
+    JOIN movie m ON t.Movie_ID = m.Movie_ID
+    WHERE t.Theater_ID = ?
+    ORDER BY t.Date DESC, t.StartTime ASC
+");
+$screenings_stmt->bind_param("i", $Theater_ID); $screenings_stmt->execute();
+$existingScreenings = $screenings_stmt->get_result();
 
 // Handle POST — insert one or more screening slots
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['screenings'])) {
@@ -90,8 +98,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
     exit;
 }
 
-mysqli_close($conn);
 ?>
+<?php // Note: connection stays open until end of script ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -144,7 +152,8 @@ mysqli_close($conn);
             border-radius: 6px;
             transition: all 0.2s;
         }
-        nav a:hover { background: rgba(255,255,255,0.08); color: #F9F9F9; }
+        nav a:hover  { background: rgba(255,255,255,0.08); color: #F9F9F9; }
+        nav a.active { background: rgba(255,77,77,0.12); color: #ff4d4d; }
 
         /* ── Page ── */
         .page-wrapper {
@@ -217,30 +226,89 @@ mysqli_close($conn);
             margin-bottom: 14px;
         }
 
-        .seat-table { border-collapse: separate; border-spacing: 4px; margin: 0 auto; }
+        /* ── Seat layout ── */
+        .seat-preview-wrap {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 420px;
+            padding-bottom: 6px;
+        }
+
+        .seat-table {
+            border-collapse: separate;
+            border-spacing: 5px;
+            margin: 0 auto;
+            min-width: max-content;
+        }
 
         .seat-row-label {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             font-weight: 700;
-            color: rgba(249,249,249,0.4);
+            color: rgba(249,249,249,0.35);
             padding: 0 6px;
             text-align: center;
+            white-space: nowrap;
         }
 
         .seat-cell {
-            width: 26px; height: 26px;
-            background: #2a2a2a;
-            border: 1px solid rgba(255,77,77,0.4);
-            border-radius: 5px;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px 6px 4px 4px;
             text-align: center;
-            font-size: 0.65rem;
-            color: rgba(249,249,249,0.6);
             vertical-align: middle;
+            font-size: 0.58rem;
+            font-weight: 700;
+            cursor: default;
+            position: relative;
+            border: none;
         }
 
-        .seat-empty {
-            width: 26px; height: 26px;
+        /* Seat types */
+        .seat-standard {
+            background: #2a2a2a;
+            border-bottom: 3px solid rgba(255,255,255,0.15);
+            color: rgba(249,249,249,0.5);
+        }
+        .seat-vip {
+            background: rgba(255,77,77,0.18);
+            border-bottom: 3px solid rgba(255,77,77,0.5);
+            color: #ff6b6b;
+        }
+        .seat-imax {
+            background: rgba(255,193,7,0.15);
+            border-bottom: 3px solid rgba(255,193,7,0.5);
+            color: #ffc107;
+        }
+        .seat-wheelchair {
+            background: rgba(33,150,243,0.15);
+            border-bottom: 3px solid rgba(33,150,243,0.5);
+            color: #64b5f6;
+        }
+        .seat-empty-cell {
+            width: 28px; height: 28px;
             background: transparent;
+        }
+
+        /* Legend */
+        .seat-legend {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.68rem;
+            color: rgba(249,249,249,0.45);
+        }
+        .legend-swatch {
+            width: 14px; height: 14px;
+            border-radius: 3px;
         }
 
         /* ── Screening form ── */
@@ -442,16 +510,36 @@ mysqli_close($conn);
     <nav>
         <a href="dashboard.php">Dashboard</a>
         <a href="malls_selection_admin.php">Malls</a>
+        <a href="malls_selection_admin.php" class="active">➕ Add Screenings</a>
         <a href="movie_upload.php">Movie Upload</a>
         <a href="theater_upload.php">Theater Upload</a>
         <a href="mall_upload.php">Mall Upload</a>
     </nav>
+    <div style="display:flex;align-items:center;gap:8px;">
+        <a href="../home.php"
+           style="color:rgba(249,249,249,0.45);text-decoration:none;font-size:0.78rem;font-weight:500;
+                  padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);
+                  transition:all 0.2s;display:flex;align-items:center;gap:5px;"
+           onmouseover="this.style.background='rgba(255,255,255,0.06)';this.style.color='#F9F9F9'"
+           onmouseout="this.style.background='';this.style.color='rgba(249,249,249,0.45)'">
+            &#8592; Customer Site
+        </a>
+        <a href="admin_logout.php"
+           style="color:#ff4d4d;text-decoration:none;font-size:0.78rem;font-weight:600;
+                  padding:6px 14px;border-radius:6px;border:1px solid rgba(255,77,77,0.3);
+                  background:rgba(255,77,77,0.08);transition:all 0.2s;display:flex;align-items:center;gap:5px;"
+           onmouseover="this.style.background='rgba(255,77,77,0.18)'"
+           onmouseout="this.style.background='rgba(255,77,77,0.08)'"
+           onclick="return confirm('Log out of admin panel?')">
+            &#x2192; Log Out
+        </a>
+    </div>
 </header>
 
 <div class="page-wrapper">
 
     <div class="page-title">
-        <?= htmlspecialchars($mallDetails['MallName']) ?> — <?= htmlspecialchars($theaterDetails['TheaterName']) ?>
+        <?= htmlspecialchars($mallDetails['MallName'] ?? 'Unknown Mall') ?> — <?= htmlspecialchars($theaterDetails['TheaterName'] ?? 'Unknown Theater') ?>
         <span>Manage Screenings</span>
     </div>
 
@@ -462,22 +550,61 @@ mysqli_close($conn);
         <div class="panel">
             <div class="panel-header"><h2>🪑 Seat Layout Preview</h2></div>
             <div class="panel-body">
-                <div class="screen-bar">SCREEN</div>
+                <div class="screen-bar">── SCREEN ──</div>
+
+                <?php if (empty($layoutProper)): ?>
+                    <div style="text-align:center;padding:40px;color:rgba(249,249,249,0.2);font-size:0.82rem;">
+                        No seat layout found for this theater.
+                    </div>
+                <?php else: ?>
+                <div class="seat-preview-wrap">
                 <table class="seat-table">
                     <?php foreach ($layoutProper as $row => $columns): ?>
                     <tr>
                         <td class="seat-row-label"><?= htmlspecialchars($row) ?></td>
-                        <?php foreach ($columns as $seat): ?>
-                            <?php if ($seat['SeatType'] === 'Empty' || $seat['SeatColumn'] == 0): ?>
-                                <td class="seat-empty"></td>
-                            <?php else: ?>
-                                <td class="seat-cell"><?= htmlspecialchars($seat['SeatColumn']) ?></td>
+                        <?php foreach ($columns as $seat):
+                            $type = strtolower($seat['SeatType'] ?? 'standard');
+                        ?>
+                            <?php if ($type === 'empty' || $seat['SeatColumn'] == 0): ?>
+                                <td class="seat-empty-cell"></td>
+                            <?php else:
+                                $cssClass = 'seat-standard';
+                                $icon     = '▪';
+                                if ($type === 'vip')         { $cssClass = 'seat-vip';         $icon = '★'; }
+                                elseif ($type === 'imax')    { $cssClass = 'seat-imax';        $icon = 'I'; }
+                                elseif ($type === 'wheelchair' || $type === 'pwdacc') { $cssClass = 'seat-wheelchair'; $icon = '♿'; }
+                            ?>
+                                <td class="seat-cell <?= $cssClass ?>" title="<?= htmlspecialchars($seat['SeatRow'].$seat['SeatColumn'].' – '.ucfirst($type)) ?>">
+                                    <?= $icon ?>
+                                </td>
                             <?php endif; ?>
                         <?php endforeach; ?>
                         <td class="seat-row-label"><?= htmlspecialchars($row) ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </table>
+                </div>
+
+                <!-- Legend -->
+                <div class="seat-legend">
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:#2a2a2a;border-bottom:3px solid rgba(255,255,255,0.15);"></div>
+                        Standard
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:rgba(255,77,77,0.18);border-bottom:3px solid rgba(255,77,77,0.5);"></div>
+                        VIP
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:rgba(255,193,7,0.15);border-bottom:3px solid rgba(255,193,7,0.5);"></div>
+                        IMAX
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:rgba(33,150,243,0.15);border-bottom:3px solid rgba(33,150,243,0.5);"></div>
+                        Wheelchair
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
 
