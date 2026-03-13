@@ -1,18 +1,23 @@
 <?php
+    date_default_timezone_set('Asia/Manila');
     include("peakscinemas_database.php");
     session_start();
     $profile_link  = "personal_info_form.php";
     $profile_photo = $_SESSION['profile_photo'] ?? null;
 
+    $user_initials = '';
     if (isset($_SESSION['user_id'])) {
         $profile_link = "profile_edit.php";
-        $ps = $conn->prepare("SELECT ProfilePhoto FROM customer WHERE Customer_ID = ?");
+        $ps = $conn->prepare("SELECT Name, ProfilePhoto FROM customer WHERE Customer_ID = ?");
         $ps->bind_param("i", $_SESSION['user_id']); $ps->execute();
         $pr = $ps->get_result()->fetch_assoc();
         if (!empty($pr['ProfilePhoto'])) {
             $profile_photo = $pr['ProfilePhoto'];
             $_SESSION['profile_photo'] = $profile_photo;
         }
+        $nameParts = explode(' ', trim($pr['Name'] ?? ''));
+        $user_initials = strtoupper(substr($nameParts[0]??'',0,1).substr(end($nameParts)??'',0,1));
+        if (strlen($user_initials)===1) $user_initials = strtoupper(substr($nameParts[0]??'',0,2));
     }
 
     $Movie_ID = filter_input(INPUT_GET, 'movie_id', FILTER_VALIDATE_INT);
@@ -123,6 +128,14 @@
             transition: all 0.3s ease;
         }
         .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-initials {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4d4d, #c0392b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem; font-weight: 800; color: #fff;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
+        }
 
         /* ── Hero Banner ── */
         .hero-banner {
@@ -728,8 +741,10 @@
     <button class="profile-btn" onclick="window.location.href='<?= $profile_link ?>'" title="Profile">
         <?php if (!empty($profile_photo)): ?>
             <img src="<?= htmlspecialchars($profile_photo) ?>" alt="Profile" referrerpolicy="no-referrer">
+        <?php elseif (!empty($user_initials)): ?>
+            <div class="profile-initials"><?= htmlspecialchars($user_initials) ?></div>
         <?php else: ?>
-            👤
+            <div class="profile-initials">?</div>
         <?php endif; ?>
     </button>
 </header>
@@ -824,8 +839,9 @@
             <?php foreach ($availableDates as $i => $d): ?>
                 <?php
                     $ts       = strtotime($d);
-                    $today    = strtotime('today');
-                    $tomorrow = strtotime('tomorrow');
+                    date_default_timezone_set('Asia/Manila');
+                    $today    = strtotime(date('Y-m-d'));
+                    $tomorrow = strtotime(date('Y-m-d', strtotime('+1 day')));
                     if ($ts === $today)        $dayLabel = 'TODAY';
                     elseif ($ts === $tomorrow) $dayLabel = 'TOMORROW';
                     else                       $dayLabel = strtoupper(date('D', $ts));

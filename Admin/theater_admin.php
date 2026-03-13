@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Asia/Manila');
 include("../peakscinemas_database.php");
 
 $Mall_ID    = filter_input(INPUT_GET, 'mall_id',    FILTER_VALIDATE_INT);
@@ -26,13 +27,21 @@ $theater_stmt = $conn->prepare("SELECT * FROM theater WHERE Theater_ID = ?");
 $theater_stmt->bind_param("i", $Theater_ID); $theater_stmt->execute();
 $theaterDetails = $theater_stmt->get_result()->fetch_assoc() ?? [];
 
-// Seat layout (base seats not assigned to any timeslot)
-$seats_stmt = $conn->prepare("SELECT * FROM seats WHERE Theater_ID = ? AND TimeSlot_ID IS NULL ORDER BY SeatRow ASC, SeatColumn ASC");
+// Seat layout — distinct positions so preview works even after screenings are added
+$seats_stmt = $conn->prepare("
+    SELECT SeatRow, SeatColumn, SeatType, SeatPrice
+    FROM seats
+    WHERE Theater_ID = ?
+    GROUP BY SeatRow, SeatColumn
+    ORDER BY SeatRow ASC, CAST(SeatColumn AS UNSIGNED) ASC
+");
 $seats_stmt->bind_param("i", $Theater_ID); $seats_stmt->execute();
 $seatLayout = $seats_stmt->get_result();
 while ($seat = $seatLayout->fetch_assoc()) {
     $layoutProper[$seat['SeatRow']][] = $seat;
 }
+// Natural-sort the rows (A, B, C... or 1, 2, 3...)
+uksort($layoutProper, 'strnatcasecmp');
 
 // Fetch existing screenings for this theater
 $screenings_stmt = $conn->prepare("
@@ -215,15 +224,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
         /* ── Seat layout preview ── */
         .screen-bar {
             text-align: center;
-            background: rgba(255,77,77,0.08);
-            border: 1px solid rgba(255,77,77,0.2);
-            border-radius: 6px;
-            padding: 6px;
-            font-size: 0.72rem;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04));
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 4px 4px 40% 40% / 4px 4px 12px 12px;
+            padding: 7px 30px;
+            font-size: 0.68rem;
             font-weight: 700;
-            letter-spacing: 3px;
-            color: rgba(255,77,77,0.7);
-            margin-bottom: 14px;
+            letter-spacing: 4px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(255,255,255,0.06);
         }
 
         /* ── Seat layout ── */
@@ -253,39 +263,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
         .seat-cell {
             width: 28px;
             height: 28px;
-            border-radius: 6px 6px 4px 4px;
+            border-radius: 6px 6px 3px 3px;
             text-align: center;
+            line-height: 28px;
             vertical-align: middle;
-            font-size: 0.58rem;
-            font-weight: 700;
+            font-size: 0.6rem;
+            font-weight: 800;
             cursor: default;
+            transition: transform 0.1s ease, filter 0.1s ease;
+        }
+        .seat-cell:hover {
+            transform: scale(1.15);
+            filter: brightness(1.3);
+            cursor: pointer;
+            z-index: 2;
             position: relative;
-            border: none;
         }
 
         /* Seat types */
         .seat-standard {
-            background: #2a2a2a;
-            border-bottom: 3px solid rgba(255,255,255,0.15);
-            color: rgba(249,249,249,0.5);
+            background: #303030;
+            border-bottom: 3px solid #555;
+            color: rgba(249,249,249,0.55);
         }
         .seat-vip {
-            background: rgba(255,77,77,0.18);
-            border-bottom: 3px solid rgba(255,77,77,0.5);
-            color: #ff6b6b;
+            background: #3d1a1a;
+            border-bottom: 3px solid #ff4d4d;
+            color: #ff7070;
         }
         .seat-imax {
-            background: rgba(255,193,7,0.15);
-            border-bottom: 3px solid rgba(255,193,7,0.5);
-            color: #ffc107;
+            background: #332b00;
+            border-bottom: 3px solid #ffc107;
+            color: #ffd54f;
+        }
+        .seat-4dx {
+            background: #1a2d1a;
+            border-bottom: 3px solid #4caf50;
+            color: #81c784;
+        }
+        .seat-premier {
+            background: #1a1a3d;
+            border-bottom: 3px solid #7c4dff;
+            color: #b388ff;
         }
         .seat-wheelchair {
-            background: rgba(33,150,243,0.15);
-            border-bottom: 3px solid rgba(33,150,243,0.5);
+            background: #0d2137;
+            border-bottom: 3px solid #2196f3;
             color: #64b5f6;
         }
         .seat-empty-cell {
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
             background: transparent;
         }
 
@@ -565,14 +593,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
                         <?php foreach ($columns as $seat):
                             $type = strtolower($seat['SeatType'] ?? 'standard');
                         ?>
-                            <?php if ($type === 'empty' || $seat['SeatColumn'] == 0): ?>
+                            <?php
+                            $type = strtolower(trim($seat['SeatType'] ?? 'standard'));
+                            if ($type === 'empty' || $seat['SeatColumn'] == 0):
+                            ?>
                                 <td class="seat-empty-cell"></td>
                             <?php else:
-                                $cssClass = 'seat-standard';
-                                $icon     = '▪';
-                                if ($type === 'vip')         { $cssClass = 'seat-vip';         $icon = '★'; }
-                                elseif ($type === 'imax')    { $cssClass = 'seat-imax';        $icon = 'I'; }
-                                elseif ($type === 'wheelchair' || $type === 'pwdacc') { $cssClass = 'seat-wheelchair'; $icon = '♿'; }
+                                if (str_contains($type,'vip') || str_contains($type,'premium')) {
+                                    $cssClass = 'seat-vip'; $icon = '★';
+                                } elseif (str_contains($type,'imax')) {
+                                    $cssClass = 'seat-imax'; $icon = 'I';
+                                } elseif (str_contains($type,'4dx') || str_contains($type,'4d')) {
+                                    $cssClass = 'seat-4dx'; $icon = '4';
+                                } elseif (str_contains($type,'premier') || str_contains($type,'director')) {
+                                    $cssClass = 'seat-premier'; $icon = 'P';
+                                } elseif (str_contains($type,'wheel') || str_contains($type,'pwd') || str_contains($type,'access')) {
+                                    $cssClass = 'seat-wheelchair'; $icon = 'W';
+                                } else {
+                                    $cssClass = 'seat-standard'; $icon = '▪';
+                                }
                             ?>
                                 <td class="seat-cell <?= $cssClass ?>" title="<?= htmlspecialchars($seat['SeatRow'].$seat['SeatColumn'].' – '.ucfirst($type)) ?>">
                                     <?= $icon ?>
@@ -585,24 +624,64 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
                 </table>
                 </div>
 
-                <!-- Legend -->
+                <!-- Seat count summary -->
+                <?php
+                $seatCounts = ['standard'=>0,'vip'=>0,'imax'=>0,'4dx'=>0,'premier'=>0,'wheelchair'=>0];
+                $totalSeats = 0;
+                foreach ($layoutProper as $rowSeats) {
+                    foreach ($rowSeats as $s) {
+                        $t = strtolower(trim($s['SeatType'] ?? 'standard'));
+                        if ($t === 'empty') continue;
+                        $totalSeats++;
+                        if (str_contains($t,'vip')||str_contains($t,'premium'))           $seatCounts['vip']++;
+                        elseif (str_contains($t,'imax'))                                   $seatCounts['imax']++;
+                        elseif (str_contains($t,'4dx')||str_contains($t,'4d'))            $seatCounts['4dx']++;
+                        elseif (str_contains($t,'premier')||str_contains($t,'director'))  $seatCounts['premier']++;
+                        elseif (str_contains($t,'wheel')||str_contains($t,'pwd'))         $seatCounts['wheelchair']++;
+                        else                                                               $seatCounts['standard']++;
+                    }
+                }
+                ?>
+                <div style="text-align:center;font-size:0.72rem;color:rgba(249,249,249,0.3);margin:10px 0 6px;">
+                    <?= $totalSeats ?> seats · <?= count($layoutProper) ?> rows
+                </div>
                 <div class="seat-legend">
+                    <?php if($seatCounts['standard']>0): ?>
                     <div class="legend-item">
-                        <div class="legend-swatch" style="background:#2a2a2a;border-bottom:3px solid rgba(255,255,255,0.15);"></div>
-                        Standard
+                        <div class="legend-swatch" style="background:#303030;border-bottom:3px solid #555;border-radius:3px;"></div>
+                        Standard (<?= $seatCounts['standard'] ?>)
                     </div>
+                    <?php endif; ?>
+                    <?php if($seatCounts['vip']>0): ?>
                     <div class="legend-item">
-                        <div class="legend-swatch" style="background:rgba(255,77,77,0.18);border-bottom:3px solid rgba(255,77,77,0.5);"></div>
-                        VIP
+                        <div class="legend-swatch" style="background:#3d1a1a;border-bottom:3px solid #ff4d4d;border-radius:3px;"></div>
+                        VIP (<?= $seatCounts['vip'] ?>)
                     </div>
+                    <?php endif; ?>
+                    <?php if($seatCounts['imax']>0): ?>
                     <div class="legend-item">
-                        <div class="legend-swatch" style="background:rgba(255,193,7,0.15);border-bottom:3px solid rgba(255,193,7,0.5);"></div>
-                        IMAX
+                        <div class="legend-swatch" style="background:#332b00;border-bottom:3px solid #ffc107;border-radius:3px;"></div>
+                        IMAX (<?= $seatCounts['imax'] ?>)
                     </div>
+                    <?php endif; ?>
+                    <?php if($seatCounts['4dx']>0): ?>
                     <div class="legend-item">
-                        <div class="legend-swatch" style="background:rgba(33,150,243,0.15);border-bottom:3px solid rgba(33,150,243,0.5);"></div>
-                        Wheelchair
+                        <div class="legend-swatch" style="background:#1a2d1a;border-bottom:3px solid #4caf50;border-radius:3px;"></div>
+                        4DX (<?= $seatCounts['4dx'] ?>)
                     </div>
+                    <?php endif; ?>
+                    <?php if($seatCounts['premier']>0): ?>
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:#1a1a3d;border-bottom:3px solid #7c4dff;border-radius:3px;"></div>
+                        Premier (<?= $seatCounts['premier'] ?>)
+                    </div>
+                    <?php endif; ?>
+                    <?php if($seatCounts['wheelchair']>0): ?>
+                    <div class="legend-item">
+                        <div class="legend-swatch" style="background:#0d2137;border-bottom:3px solid #2196f3;border-radius:3px;"></div>
+                        Wheelchair (<?= $seatCounts['wheelchair'] ?>)
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php endif; ?>
             </div>

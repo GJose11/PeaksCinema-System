@@ -5,9 +5,10 @@ session_start();
 $profile_link  = "personal_info_form.php";
 $profile_photo = $_SESSION['profile_photo'] ?? null;
 
+$user_initials = '';
 if (isset($_SESSION['user_id'])) {
     $profile_link = "profile_edit.php";
-    $stmt = $conn->prepare("SELECT ProfilePhoto FROM customer WHERE Customer_ID = ?");
+    $stmt = $conn->prepare("SELECT Name, ProfilePhoto FROM customer WHERE Customer_ID = ?");
     $stmt->bind_param("i", $_SESSION['user_id']);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
@@ -15,6 +16,9 @@ if (isset($_SESSION['user_id'])) {
         $profile_photo = $row['ProfilePhoto'];
         $_SESSION['profile_photo'] = $profile_photo;
     }
+    $nameParts = explode(' ', trim($row['Name'] ?? ''));
+    $user_initials = strtoupper(substr($nameParts[0]??'',0,1).substr(end($nameParts)??'',0,1));
+    if (strlen($user_initials)===1) $user_initials = strtoupper(substr($nameParts[0]??'',0,2));
 }
 
 $Movie_ID    = isset($_POST['movie_id'])      ? $_POST['movie_id']      : '';
@@ -78,9 +82,17 @@ if (!empty($selectedSeats)) {
         header { background-color: #1C1C1C; display: flex; justify-content: space-between; align-items: center; padding: 10px 30px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; }
         .logo img { height: 50px; cursor: pointer; filter: invert(1); transition: transform 0.2s ease; }
         .logo img:hover { transform: scale(1.05); }
-        .profile-btn { background-color: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); overflow: hidden; padding: 0; font-size: 1.2rem; }
+        .profile-btn { background-color: #F9F9F9; border: none; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.2); overflow: hidden; padding: 0; font-size: 1.2rem; }
         .profile-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-initials {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4d4d, #c0392b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem; font-weight: 800; color: #fff;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
+        }
         main { margin: 30px auto; width: 85%; max-width: 1000px; display: flex; flex-direction: column; gap: 12px; }
         .panel { backdrop-filter: blur(2px); background-color: rgba(0,0,0,0.4); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.6); padding: 8px 20px; }
         .summary-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
@@ -125,8 +137,10 @@ if (!empty($selectedSeats)) {
     <button class="profile-btn" onclick="window.location.href='<?= $profile_link ?>'" title="Profile">
         <?php if (!empty($profile_photo)): ?>
             <img src="<?= htmlspecialchars($profile_photo) ?>" alt="Profile" referrerpolicy="no-referrer">
+        <?php elseif (!empty($user_initials)): ?>
+            <div class="profile-initials"><?= htmlspecialchars($user_initials) ?></div>
         <?php else: ?>
-            👤
+            <div class="profile-initials">?</div>
         <?php endif; ?>
     </button>
 </header>

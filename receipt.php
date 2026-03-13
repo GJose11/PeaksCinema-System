@@ -40,7 +40,7 @@ if (empty($paymentMethod)) {
 include("peakscinemas_database.php");
 
 // Fetch profile photo from DB
-$stmt = $conn->prepare("SELECT Email, ProfilePhoto FROM customer WHERE Customer_ID = ?");
+$stmt = $conn->prepare("SELECT Name, Email, ProfilePhoto FROM customer WHERE Customer_ID = ?");
 $stmt->bind_param("i", $Customer_ID);
 $stmt->execute();
 $customerRow = $stmt->get_result()->fetch_assoc();
@@ -49,6 +49,10 @@ if (!empty($customerRow['ProfilePhoto'])) {
     $profile_photo = $customerRow['ProfilePhoto'];
     $_SESSION['profile_photo'] = $profile_photo;
 }
+$user_initials = '';
+$nameParts = explode(' ', trim($customerRow['Name'] ?? ''));
+$user_initials = strtoupper(substr($nameParts[0]??'',0,1).substr(end($nameParts)??'',0,1));
+if (strlen($user_initials)===1) $user_initials = strtoupper(substr($nameParts[0]??'',0,2));
 
 $movie_stmt = $conn->prepare("SELECT * FROM movie WHERE Movie_ID = ?");
 $movie_stmt->bind_param("i", $Movie_ID); $movie_stmt->execute();
@@ -188,6 +192,14 @@ $paymentLabel = match($paymentMethod) {
         }
         .profile-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
         .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
+        .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-initials {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: linear-gradient(135deg, #ff4d4d, #c0392b);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem; font-weight: 800; color: #fff;
+            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
+        }
 
         /* ── Main layout ── */
         main {
@@ -428,8 +440,10 @@ $paymentLabel = match($paymentMethod) {
     <button class="profile-btn" onclick="window.location.href='<?= $profile_link ?>'" title="Profile">
         <?php if (!empty($profile_photo)): ?>
             <img src="<?= htmlspecialchars($profile_photo) ?>" alt="Profile" referrerpolicy="no-referrer">
+        <?php elseif (!empty($user_initials)): ?>
+            <div class="profile-initials"><?= htmlspecialchars($user_initials) ?></div>
         <?php else: ?>
-            👤
+            <div class="profile-initials">?</div>
         <?php endif; ?>
     </button>
 </header>
