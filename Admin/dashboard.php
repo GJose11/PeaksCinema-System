@@ -70,6 +70,19 @@
             padding-top: 70px;
             padding-bottom: 60px;
         }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url('../movie-background-collage.jpg') center/cover no-repeat;
+            opacity: 0.04; z-index: 0; pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 20%, #0f0f0f 75%);
+            z-index: 1; pointer-events: none;
+        }
+        header, nav, .page-wrapper { position: relative; z-index: 10; }
 
         /* ── Header ── */
         header {

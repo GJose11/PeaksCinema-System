@@ -127,6 +127,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
             padding-top: 70px;
             padding-bottom: 50px;
         }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url('../movie-background-collage.jpg') center/cover no-repeat;
+            opacity: 0.04; z-index: 0; pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 20%, #0f0f0f 75%);
+            z-index: 1; pointer-events: none;
+        }
+        header, nav, .page-wrapper { position: relative; z-index: 10; }
 
         /* ── Header ── */
         header {
@@ -236,44 +249,63 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
             box-shadow: 0 4px 20px rgba(255,255,255,0.06);
         }
 
-        /* ── Seat layout ── */
+        /* ── Seat layout — flexbox rows ── */
         .seat-preview-wrap {
-            overflow-x: auto;
-            overflow-y: auto;
-            max-height: 420px;
-            padding-bottom: 6px;
+            overflow: hidden;
+            padding: 4px 0 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            /* Fixed height so seats never push panel taller */
+            height: 460px;
         }
 
-        .seat-table {
-            border-collapse: separate;
-            border-spacing: 5px;
-            margin: 0 auto;
-            min-width: max-content;
+        .seat-grid-admin {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        .seat-row-admin {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 5px;
+            height: 37px;
         }
 
         .seat-row-label {
+            width: 22px;
+            min-width: 22px;
+            flex-shrink: 0;
             font-size: 0.68rem;
             font-weight: 700;
             color: rgba(249,249,249,0.35);
-            padding: 0 6px;
             text-align: center;
-            white-space: nowrap;
+            line-height: 1;
         }
 
         .seat-cell {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px 6px 3px 3px;
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            flex-grow: 0;
+            border-radius: 7px 7px 4px 4px;
             text-align: center;
-            line-height: 28px;
-            vertical-align: middle;
-            font-size: 0.6rem;
+            line-height: 32px;
+            font-size: 0.64rem;
             font-weight: 800;
             cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.1s ease, filter 0.1s ease;
         }
         .seat-cell:hover {
-            transform: scale(1.15);
+            transform: scale(1.18);
             filter: brightness(1.3);
             cursor: pointer;
             z-index: 2;
@@ -312,10 +344,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
             color: #64b5f6;
         }
         .seat-empty-cell {
-            width: 28px;
-            height: 28px;
-            background: transparent;
+            width: 26px;
+            height: 26px;
+            flex-shrink: 0;
+            flex-grow: 0;
+            background: #303030;
+            border-bottom: 3px solid #555;
+            border-radius: 6px 6px 3px 3px;
         }
+        .seat-aisle  { width: 22px; flex-shrink: 0; display: block; }
+        .seat-section { width: 12px; flex-shrink: 0; display: block; }
 
         /* Legend */
         .seat-legend {
@@ -578,50 +616,46 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
         <div class="panel">
             <div class="panel-header"><h2>🪑 Seat Layout Preview</h2></div>
             <div class="panel-body">
-                <div class="screen-bar">── SCREEN ──</div>
+                <div style="display:flex;justify-content:center;margin-bottom:18px;">
+                    <div class="screen-bar">── SCREEN ──</div>
+                </div>
 
                 <?php if (empty($layoutProper)): ?>
                     <div style="text-align:center;padding:40px;color:rgba(249,249,249,0.2);font-size:0.82rem;">
                         No seat layout found for this theater.
                     </div>
                 <?php else: ?>
-                <div class="seat-preview-wrap">
-                <table class="seat-table">
+                <div class="seat-preview-wrap" id="seatPreviewWrap">
+                <div class="seat-grid-admin" id="seatGridAdmin">
                     <?php foreach ($layoutProper as $row => $columns): ?>
-                    <tr>
-                        <td class="seat-row-label"><?= htmlspecialchars($row) ?></td>
-                        <?php foreach ($columns as $seat):
-                            $type = strtolower($seat['SeatType'] ?? 'standard');
-                        ?>
-                            <?php
+                    <div class="seat-row-admin">
+                        <span class="seat-row-label"><?= htmlspecialchars($row) ?></span>
+                        <?php
+                        // Pad to 20 seats
+                        $taCols = array_values(array_slice($columns, 0, 20));
+                        while (count($taCols) < 20) {
+                            $taCols[] = ['SeatType'=>'standard','SeatRow'=>$row,'SeatColumn'=>count($taCols)+1,'SeatPrice'=>0,'SeatAvailability'=>1,'Seat_ID'=>0];
+                        }
+                        foreach ($taCols as $taPos => $seat):
                             $type = strtolower(trim($seat['SeatType'] ?? 'standard'));
-                            if ($type === 'empty' || $seat['SeatColumn'] == 0):
-                            ?>
-                                <td class="seat-empty-cell"></td>
-                            <?php else:
-                                if (str_contains($type,'vip') || str_contains($type,'premium')) {
-                                    $cssClass = 'seat-vip'; $icon = '★';
-                                } elseif (str_contains($type,'imax')) {
-                                    $cssClass = 'seat-imax'; $icon = 'I';
-                                } elseif (str_contains($type,'4dx') || str_contains($type,'4d')) {
-                                    $cssClass = 'seat-4dx'; $icon = '4';
-                                } elseif (str_contains($type,'premier') || str_contains($type,'director')) {
-                                    $cssClass = 'seat-premier'; $icon = 'P';
-                                } elseif (str_contains($type,'wheel') || str_contains($type,'pwd') || str_contains($type,'access')) {
-                                    $cssClass = 'seat-wheelchair'; $icon = 'W';
-                                } else {
-                                    $cssClass = 'seat-standard'; $icon = '▪';
-                                }
-                            ?>
-                                <td class="seat-cell <?= $cssClass ?>" title="<?= htmlspecialchars($seat['SeatRow'].$seat['SeatColumn'].' – '.ucfirst($type)) ?>">
-                                    <?= $icon ?>
-                                </td>
-                            <?php endif; ?>
+                            $dispNum = ($taPos < 10) ? (10 - $taPos) : ($taPos - 10 + 1);
+                            if (str_contains($type,'vip')||str_contains($type,'premium')) { $cssClass='seat-vip'; $icon='★'; }
+                            elseif (str_contains($type,'imax'))  { $cssClass='seat-imax';  $icon='I'; }
+                            elseif (str_contains($type,'4dx')||str_contains($type,'4d')) { $cssClass='seat-4dx'; $icon='4'; }
+                            elseif (str_contains($type,'premier')||str_contains($type,'director')) { $cssClass='seat-premier'; $icon='P'; }
+                            elseif (str_contains($type,'wheel')||str_contains($type,'pwd')) { $cssClass='seat-wheelchair'; $icon='W'; }
+                            else { $cssClass='seat-standard'; $icon=$dispNum; }
+                        ?>
+                        <?php if ($taPos === 10): ?><div class="seat-aisle"></div><?php endif; ?>
+                        <?php if ($taPos === 5 || $taPos === 15): ?><div class="seat-section"></div><?php endif; ?>
+                            <div class="seat-cell <?= $cssClass ?>" title="<?= htmlspecialchars($seat['SeatRow'].$dispNum) ?>">
+                                <?= $icon ?>
+                            </div>
                         <?php endforeach; ?>
-                        <td class="seat-row-label"><?= htmlspecialchars($row) ?></td>
-                    </tr>
+                        <span class="seat-row-label"><?= htmlspecialchars($row) ?></span>
+                    </div>
                     <?php endforeach; ?>
-                </table>
+                </div>
                 </div>
 
                 <!-- Seat count summary -->
@@ -841,6 +875,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['delete_timeslot'])) {
 
     // Start with 1 slot
     addSlot();
+
+// ── Auto-scale seat grid to fill panel — no scroll ──
+function scaleAdminSeats(){
+    const wrap = document.getElementById('seatPreviewWrap');
+    const grid = document.getElementById('seatGridAdmin');
+    if(!wrap||!grid) return;
+    grid.style.transform = '';
+    grid.style.transformOrigin = '';
+    const cw = wrap.clientWidth  - 8;
+    const ch = wrap.clientHeight - 8;
+    const gw = grid.offsetWidth;
+    const gh = grid.offsetHeight;
+    if(!gw||!gh) return;
+    const scale = Math.min(cw/gw, ch/gh, 1);
+    grid.style.transform = 'scale('+scale+')';
+    grid.style.transformOrigin = 'center center';
+}
+window.addEventListener('load',   scaleAdminSeats);
+window.addEventListener('resize', scaleAdminSeats);
 </script>
 </body>
 </html>

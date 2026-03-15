@@ -74,6 +74,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Outfit', sans-serif; background: #0f0f0f; color: #F9F9F9; min-height: 100vh; padding-top: 70px; padding-bottom: 60px; }
+        body::before { content: ''; position: fixed; inset: 0; background: url('../movie-background-collage.jpg') center/cover no-repeat; opacity: 0.04; z-index: 0; pointer-events: none; }
+        body::after  { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at center, transparent 20%, #0f0f0f 75%); z-index: 1; pointer-events: none; }
+        header, nav, .page-wrapper { position: relative; z-index: 10; }
 
         header { background: #1C1C1C; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; height: 60px; border-bottom: 1px solid rgba(255,255,255,0.06); }
         .logo { font-size: 1rem; font-weight: 700; letter-spacing: 2px; color: #F9F9F9; text-transform: uppercase; }

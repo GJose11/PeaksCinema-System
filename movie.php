@@ -80,33 +80,43 @@
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: #111;
+            background: #0d0d0d;
             color: #F9F9F9;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url('movie-background-collage.jpg') center/cover no-repeat fixed;
+            opacity: 0.12;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 10%, rgba(13,13,13,0.5) 60%, #0d0d0d 100%);
+            z-index: 1;
+            pointer-events: none;
+        }
 
         /* ── Header ── */
         header {
-            background-color: #1C1C1C;
+            background: #1C1C1C;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 30px;
+            padding: 0 30px;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
+            top: 0; left: 0; width: 100%;
+            height: 60px;
             z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
         }
-        header.header-hidden {
-            transform: translateY(-100%);
-            opacity: 0;
-        }
-        /* Push body down since header is now fixed */
+        header.header-hidden { transform: translateY(-100%); }
         body { padding-top: 70px; }
 
         .logo img {
@@ -133,12 +143,12 @@
             width: 100%; height: 100%; border-radius: 50%;
             background: linear-gradient(135deg, #ff4d4d, #c0392b);
             display: flex; align-items: center; justify-content: center;
-            font-size: 20px; font-weight: 800; color: #fff;
+            font-size: 0.82rem; font-weight: 800; color: #fff;
             letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
         }
 
         /* ── Hero Banner ── */
-        .hero-banner {
+        .hero-banner { position: relative; z-index: 10;
             position: relative;
             width: 100%;
             height: 480px;
@@ -287,6 +297,8 @@
         .hero-trailer-btn:hover {
             background: rgba(255,77,77,0.8);
             border-color: #ff4d4d;
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255,77,77,0.3); 
         }
 
         /* ── Centered Play Button Overlay ── */
@@ -337,15 +349,8 @@
 
         /* ── Main Content ── */
         .main-content-wrapper {
-            background: url('movie-background-collage.jpg') center center / cover no-repeat fixed;
             position: relative;
-        }
-
-        .main-content-wrapper::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(10, 10, 10, 0.88);
+            z-index: 10;
         }
 
         .main-content {
@@ -375,14 +380,11 @@
 
         /* ── Schedule Section ── */
         .schedule-wrapper {
-            background: url('movie-background-collage.jpg') center center / cover no-repeat fixed;
             position: relative;
+            z-index: 10;
         }
         .schedule-wrapper::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(8,8,8,0.92);
+            content: none;
         }
         .schedule-inner {
             position: relative;
@@ -435,7 +437,14 @@
         .date-panel.active { display: block; }
 
         /* Mall block */
-        .mall-block { margin-bottom: 40px; padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .mall-block {
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
         .mall-block:last-child { border-bottom: none; margin-bottom: 0; }
 
         .mall-header {

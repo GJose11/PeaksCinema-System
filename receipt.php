@@ -148,76 +148,77 @@ $paymentLabel = match($paymentMethod) {
 
         body {
             font-family: 'Outfit', sans-serif;
-            background: url("movie-background-collage.jpg") no-repeat center center fixed;
-            background-size: cover;
+            background: #0d0d0d;
             color: #F9F9F9;
             min-height: 100vh;
-            padding-top: 100px;
-            padding-bottom: 50px;
+            padding-top: 80px;
+            padding-bottom: 60px;
+        }
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: url("movie-background-collage.jpg") no-repeat center center fixed;
+            background-size: cover;
+            opacity: 0.12;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at center, transparent 10%, rgba(13,13,13,0.5) 60%, #0d0d0d 100%);
+            z-index: 1;
+            pointer-events: none;
         }
 
         /* ── Header ── */
         header {
-            background-color: #1C1C1C;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 30px;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%;
-            z-index: 1000;
+            background: #1C1C1C;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 30px;
+            position: fixed; top: 0; left: 0; width: 100%;
+            height: 60px; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
         }
-
-        .logo img {
-            height: 50px;
-            cursor: pointer;
-            filter: invert(1);
-            transition: transform 0.2s ease;
-        }
+        .logo img { height: 48px; cursor: pointer; filter: invert(1); transition: transform 0.2s; }
         .logo img:hover { transform: scale(1.05); }
-
         .profile-btn {
-            background-color: #F9F9F9;
-            border: none;
-            border-radius: 50%;
-            width: 45px; height: 45px;
+            background: #F9F9F9; border: none; border-radius: 50%;
+            width: 42px; height: 42px;
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            overflow: hidden;
-            padding: 0;
+            cursor: pointer; overflow: hidden; padding: 0;
+            transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .profile-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .profile-btn:hover { transform: scale(1.1); box-shadow: 0 0 12px rgba(255,255,255,0.3); }
-        .profile-btn img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+        .profile-btn:hover { transform: scale(1.1); }
         .profile-initials {
             width: 100%; height: 100%; border-radius: 50%;
             background: linear-gradient(135deg, #ff4d4d, #c0392b);
             display: flex; align-items: center; justify-content: center;
             font-size: 0.82rem; font-weight: 800; color: #fff;
-            letter-spacing: 0.5px; font-family: 'Outfit', sans-serif;
         }
 
         /* ── Main layout ── */
         main {
-            width: 90%;
-            max-width: 620px;
-            margin: 30px auto;
+            width: 95%;
+            max-width: 680px;
+            margin: 28px auto;
             display: flex;
             flex-direction: column;
             gap: 16px;
+            position: relative;
+            z-index: 10;
         }
+        .page-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #ff4d4d; margin-bottom: 5px; }
+        .page-title  { font-size: 1.7rem; font-weight: 800; margin-bottom: 4px; }
 
         /* ── Success banner ── */
         .success-banner {
-            backdrop-filter: blur(2px);
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-            padding: 24px 20px;
+            background: linear-gradient(135deg, rgba(76,175,80,0.1), rgba(76,175,80,0.04));
+            border: 1px solid rgba(76,175,80,0.2);
+            border-radius: 14px;
+            padding: 28px 20px;
             text-align: center;
         }
 
@@ -247,8 +248,8 @@ $paymentLabel = match($paymentMethod) {
         .booking-ref {
             display: inline-block;
             margin-top: 12px;
-            background: rgba(255,77,77,0.1);
-            border: 1px solid rgba(255,77,77,0.3);
+            background: rgba(255,77,77,0.08);
+            border: 1px solid rgba(255,77,77,0.25);
             border-radius: 8px;
             padding: 6px 18px;
             font-size: 0.9rem;
@@ -259,10 +260,9 @@ $paymentLabel = match($paymentMethod) {
 
         /* ── Receipt card ── */
         .receipt-card {
-            backdrop-filter: blur(2px);
-            background: rgba(0,0,0,0.4);
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            background: #1a1a1a;
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
             overflow: hidden;
         }
 
@@ -450,10 +450,13 @@ $paymentLabel = match($paymentMethod) {
 
 <main>
 
+    <p class="page-label">Booking Complete</p>
+    <h1 class="page-title">Your Receipt</h1>
+
     <!-- Success banner -->
     <div class="success-banner">
         <div class="success-icon">🎬</div>
-        <h1>Booking Confirmed!</h1>
+        <h1 style="font-size:1.2rem;font-weight:800;color:#66bb6a;margin-bottom:4px;">Booking Confirmed!</h1>
         <p>Your tickets have been booked successfully.<br>Enjoy the show!</p>
         <div class="booking-ref"><?= htmlspecialchars($bookingRef) ?></div>
     </div>
@@ -534,6 +537,22 @@ $paymentLabel = match($paymentMethod) {
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
+    // Hide header on scroll
+    (function() {
+        const h = document.querySelector('header');
+        let last = window.scrollY, tick = false;
+        window.addEventListener('scroll', function() {
+            if (!tick) {
+                requestAnimationFrame(function() {
+                    const cur = window.scrollY;
+                    h.style.transform = (cur > last && cur > 80) ? 'translateY(-100%)' : 'translateY(0)';
+                    last = cur; tick = false;
+                });
+                tick = true;
+            }
+        }, { passive: true });
+    })();
+
     function downloadReceipt() {
         if (typeof html2pdf !== 'undefined') {
             const element = document.querySelector('main');

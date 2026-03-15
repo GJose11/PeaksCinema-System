@@ -50,34 +50,48 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
   <title>PeaksCinemas - Home</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Outfit', sans-serif;
-      background: url("movie-background-collage.jpg") no-repeat center center fixed;
-      background-size: cover;
+      background: #0f0f0f;
       color: #F9F9F9;
-      background-color: #1C1C1C;
       display: flex;
       flex-direction: column;
       min-height: 100vh;
     }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: url("movie-background-collage.jpg") center/cover no-repeat;
+      opacity: 0.12;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 10%, rgba(15,15,15,0.55) 60%, #0f0f0f 100%);
+      z-index: 1;
+      pointer-events: none;
+    }
 
     header {
-      background-color: #1C1C1C;
-      color: #F9F9F9;
+      background: #1C1C1C;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 30px;
+      padding: 0 30px;
       position: fixed;
       top: 0; left: 0; width: 100%;
+      height: 60px;
       z-index: 1000;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
     }
-    header.header-hidden { transform: translateY(-100%); opacity: 0; }
+    header.header-hidden { transform: translateY(-100%); }
     body { padding-top: 70px; }
+    .outer { position: relative; z-index: 10; }
 
     .logo img {
       height: 50px;
@@ -88,7 +102,6 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
 
     .logo img:hover { transform: scale(1.05); }
 
-    /* ── FIXED: search bar width ── */
     .search-container {
       position: relative;
       margin: 0 20px;
@@ -99,15 +112,20 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     .search-container input {
       width: 100%;
       padding: 8px 18px;
-      border-radius: 25px;
-      border: none;
-      background: #F9F9F9;
-      color: #1C1C1C;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      color: #F9F9F9;
       font-family: 'Outfit', sans-serif;
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       outline: none;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: border-color 0.2s;
     }
+    .search-container input:focus {
+      border-color: rgba(255,77,77,0.4);
+      background: rgba(255,255,255,0.09);
+    }
+    .search-container input::placeholder { color: rgba(249,249,249,0.3); }
 
     .header-actions {
       display: flex;
@@ -144,7 +162,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 0.82rem;
       font-weight: 800;
       color: #fff;
       letter-spacing: 0.5px;
@@ -156,62 +174,48 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       box-shadow: 0 0 12px rgba(255,255,255,0.3);
     }
 
-    .glassbox {
-      margin: 30px auto;
-      width: 90%;
-      max-width: 1200px;
-      padding: 30px 20px;
-      backdrop-filter: blur(3px);
-      background-color: rgba(0,0,0,0.5);
-      border-radius: 8px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-      color: #F9F9F9;
+    .outer {
+      position: relative; z-index: 10;
+      margin: 28px auto;
+      width: 95%;
+      max-width: 1280px;
     }
-
-    .section-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 10px;
-      text-align: center;
-    }
-
-    .section-subtitle {
-      font-size: 0.9rem;
-      color: #e0e0e0;
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .page-label { font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #ff4d4d; margin-bottom: 5px; text-align: center; }
+    .page-title { font-size: 1.7rem; font-weight: 800; margin-bottom: 6px; text-align: center; }
+    .page-sub   { font-size: 0.88rem; color: rgba(249,249,249,0.4); text-align: center; margin-bottom: 28px; }
 
     .tabs {
       display: flex;
       justify-content: center;
-      margin-bottom: 25px;
-      gap: 10px;
+      margin-bottom: 28px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
     .tab {
-      background: rgba(255,255,255,0.05);
-      color: #F9F9F9;
-      padding: 8px 22px;
-      border-radius: 6px;
+      background: rgba(255,255,255,0.04);
+      color: rgba(249,249,249,0.55);
+      padding: 8px 24px;
+      border-radius: 8px;
       cursor: pointer;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.82rem;
       border: 1px solid rgba(255,255,255,0.1);
-      transition: all 0.3s ease;
+      transition: all 0.2s;
       white-space: nowrap;
+      font-family: 'Outfit', sans-serif;
     }
 
     .tab.active {
-      background: #ff4d4d;
-      border-color: #ff4d4d;
-      box-shadow: 0 0 15px rgba(255,77,77,0.3);
+      background: rgba(255,77,77,0.12);
+      border-color: rgba(255,77,77,0.35);
+      color: #ff4d4d;
     }
 
     .tab:hover:not(.active) {
-      background: rgba(255,255,255,0.15);
-      transform: translateY(-2px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.2);
+      color: #F9F9F9;
     }
 
     .movies-container {
@@ -221,18 +225,21 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     }
 
     .movie-card {
-      background: rgba(255,255,255,0.03);
-      border-radius: 8px;
+      background: #1a1a1a;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
       padding: 10px;
       text-align: center;
-      transition: all 0.3s ease;
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
       display: flex;
       flex-direction: column;
+      cursor: pointer;
     }
 
     .movie-card:hover {
-      background: rgba(255,255,255,0.08);
       transform: translateY(-5px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+      /* Red border hue removed here */
     }
 
     /* ── Poster Wrapper & Hover Overlay ── */
@@ -335,7 +342,6 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       border-color: #cc0000;
     }
 
-    /* ── Trailer Modal ── */
     .trailer-modal {
       display: none;
       position: fixed;
@@ -372,7 +378,6 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       border-radius: 50%;
     }
 
-    /* ── Movie Title ── */
     .movie-title {
       margin: 10px 0 8px;
       font-weight: 700;
@@ -391,45 +396,46 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     }
 
     .buy-btn {
-      background: #F9F9F9;
-      color: #1C1C1C;
-      border: none;
-      padding: 7px 12px;
-      border-radius: 6px;
+      background: rgba(255,77,77,0.12);
+      color: #ff6b6b;
+      border: 1px solid rgba(255,77,77,0.25);
+      padding: 8px 12px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: 0.3s;
-      font-family: "Outfit", sans-serif;
+      transition: all 0.2s;
+      font-family: 'Outfit', sans-serif;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       width: 100%;
       margin-top: auto;
     }
 
     .buy-btn:hover {
-      background: #ffffff;
-      transform: scale(1.02);
-      box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+      background: #ff4d4d;
+      color: #fff;
+      border-color: #ff4d4d;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(255,77,77,0.3);
     }
 
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
     footer {
-      background-color: #1F1F1F;
-      color: #F9F9F9;
+      background: transparent;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      color: rgba(249,249,249,0.3);
       text-align: center;
-      padding: 30px 20px;
+      padding: 28px 20px;
       margin-top: auto;
-      border-top: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+      z-index: 10;
+      font-size: 0.78rem;
     }
-
-    footer h2 { color: #F9F9F9; font-size: 1.3rem; margin-bottom: 8px; }
-    footer p { font-size: 0.85rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
     @media (max-width: 768px) {
       .movies-container { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
       .movie-poster-wrapper img { height: 160px; }
-      .glassbox { padding: 15px 10px; }
       header { flex-wrap: wrap; gap: 10px; }
       .search-container { order: 3; width: 100%; max-width: 100%; margin: 10px 0 0 0; }
       .header-actions { order: 2; }
@@ -442,14 +448,13 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
   <header>
     <div class="logo">
       <img src="peakscinematransparent.png" alt="PeaksCinemas Logo"
-           onclick="window.location.href='home.php'" tabindex="0"
-           onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); window.location.href='home.php'; }">
+           onclick="window.location.href='home.php'">
     </div>
     <div class="search-container">
       <form id="searchForm" action="javascript:void(0);" method="get">
         <input type="text" id="searchInput" name="search" placeholder="Search Movies..." autocomplete="off">
       </form>
-      <div id="searchResults" style="position:absolute; top:45px; width:100%; background:#fff; color:#000; border-radius:8px; max-height:300px; overflow-y:auto; display:none; z-index:1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></div>
+      <div id="searchResults" style="position:absolute;top:42px;width:100%;background:#1a1a1a;border:1px solid rgba(255,255,255,0.08);border-radius:10px;max-height:300px;overflow-y:auto;display:none;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
     </div>
     <div class="header-actions">
       <button class="profile-btn" onclick="window.location.href='<?= $profile_link ?>'" title="Profile">
@@ -464,22 +469,21 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     </div>
   </header>
 
-  <div class="glassbox">
+  <div class="outer">
     <main id="home">
-      <h1 class="section-title">Browse Movies</h1>
-      <p class="section-subtitle">Discover what&apos;s now showing or coming soon at PeaksCinemas.</p>
+      <p class="page-label">Peak's Cinema</p>
+      <h1 class="page-title"><?php if (!empty($user_initials) && isset($user['Name'])): ?>Welcome back, <?= htmlspecialchars(explode(' ', trim($user['Name']))[0]) ?>! 👋<?php else: ?>Welcome to Peak's Cinema 🎬<?php endif; ?></h1>
+      <p class="page-sub">Your favourite movies are waiting. Book your seats today.</p>
 
-      <div class="tabs" role="tablist" aria-label="Movie availability">
-        <div class="tab active" role="tab" aria-selected="true" aria-controls="now-showing" tabindex="0" onclick="showTab(event, 'now-showing')">Now Showing</div>
-        <div class="tab" role="tab" aria-selected="false" aria-controls="coming-soon" tabindex="-1" onclick="showTab(event, 'coming-soon')">Coming Soon</div>
+      <div class="tabs">
+        <div class="tab active" onclick="showTab(event, 'now-showing')">Now Showing</div>
+        <div class="tab" onclick="showTab(event, 'coming-soon')">Coming Soon</div>
       </div>
 
-      <!-- NOW SHOWING -->
-      <div id="now-showing" class="tab-content active" role="tabpanel">
+      <div id="now-showing" class="tab-content active">
         <div class="movies-container">
           <?php while ($row = $now_showing_results->fetch_assoc()): ?>
-            <div class="movie-card" tabindex="0"
-                 onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); this.querySelector('.buy-btn').click(); }">
+            <div class="movie-card" tabindex="0">
               <div class="movie-poster-wrapper">
                 <img src="/<?= htmlspecialchars($row['MoviePoster']) ?>" alt="<?= htmlspecialchars($row['MovieName']) ?>">
                 <div class="movie-hover-overlay">
@@ -495,8 +499,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
                   <?php if (!empty($row['Price'])): ?>
                     <p class="overlay-price">From ₱<?= number_format($row['Price'], 2) ?></p>
                   <?php endif; ?>
-                  <button class="trailer-btn"
-                          onclick="event.stopPropagation(); <?= !empty($row['TrailerURL']) ? "playTrailer('" . htmlspecialchars($row['TrailerURL']) . "')" : "" ?>">
+                  <button class="trailer-btn" onclick="event.stopPropagation(); <?= !empty($row['TrailerURL']) ? "playTrailer('" . htmlspecialchars($row['TrailerURL']) . "')" : "" ?>">
                     ▶ Play Trailer
                   </button>
                 </div>
@@ -508,12 +511,10 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
         </div>
       </div>
 
-      <!-- COMING SOON -->
-      <div id="coming-soon" class="tab-content" role="tabpanel">
+      <div id="coming-soon" class="tab-content">
         <div class="movies-container">
           <?php while ($row = $coming_soon_results->fetch_assoc()): ?>
-            <div class="movie-card" tabindex="0"
-                 onkeydown="if(event.key==='Enter' || event.key===' '){ event.preventDefault(); this.querySelector('.buy-btn').click(); }">
+            <div class="movie-card" tabindex="0">
               <div class="movie-poster-wrapper">
                 <img src="/<?= htmlspecialchars($row['MoviePoster']) ?>" alt="<?= htmlspecialchars($row['MovieName']) ?>">
                 <div class="movie-hover-overlay">
@@ -526,8 +527,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
                   <?php if (!empty($row['Runtime'])): ?>
                     <p class="overlay-runtime">⏱ <?= htmlspecialchars($row['Runtime']) ?> mins</p>
                   <?php endif; ?>
-                  <button class="trailer-btn"
-                          onclick="event.stopPropagation(); <?= !empty($row['TrailerURL']) ? "playTrailer('" . htmlspecialchars($row['TrailerURL']) . "')" : "" ?>">
+                  <button class="trailer-btn" onclick="event.stopPropagation(); <?= !empty($row['TrailerURL']) ? "playTrailer('" . htmlspecialchars($row['TrailerURL']) . "')" : "" ?>">
                     ▶ Play Trailer
                   </button>
                 </div>
@@ -538,68 +538,45 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
           <?php endwhile; ?>
         </div>
       </div>
-
     </main>
   </div>
 
-  <!-- Trailer Modal -->
   <div id="trailerModal" class="trailer-modal">
     <div class="trailer-modal-content">
       <span class="close-modal" onclick="closeTrailer()">✕</span>
-      <iframe
-        id="trailerFrame"
-        width="100%"
-        height="100%"
-        frameborder="0"
-        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-        allowfullscreen>
-      </iframe>
+      <iframe id="trailerFrame" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
     </div>
   </div>
 
   <footer>
-    <h2>About Us</h2>
-    <p>Welcome to <strong>Peak'sCinemas</strong>, where Peak Movies meet Peak Experiences. Immerse yourself in the ultimate cinematic journey with state-of-the-art visuals and sound.</p>
-
+    <p>© <?= date('Y') ?> Peak's Cinema &nbsp;·&nbsp; All Rights Reserved</p>
   </footer>
 
   <script>
-    // Tab switching
     function showTab(event, tabId) {
       const tabs = document.querySelectorAll('.tab');
       const tabContents = document.querySelectorAll('.tab-content');
-      tabs.forEach(tab => {
-        const isActive = tab === event.currentTarget;
-        tab.classList.toggle('active', isActive);
-        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        tab.setAttribute('tabindex', isActive ? '0' : '-1');
-      });
+      tabs.forEach(tab => tab.classList.toggle('active', tab === event.currentTarget));
       tabContents.forEach(content => content.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
     }
 
-    // Buy / Details buttons
     function attachBuyButtons() {
       document.querySelectorAll('.buy-btn').forEach(button => {
         button.onclick = () => {
-          const movieId = button.getAttribute('data-id');
-          window.location.href = `movie.php?movie_id=${movieId}`;
+          window.location.href = `movie.php?movie_id=${button.getAttribute('data-id')}`;
         };
       });
     }
     attachBuyButtons();
 
-    // Trailer modal
     function playTrailer(url) {
       let videoId = '';
-      if (url.includes('watch?v=')) {
-        videoId = url.split('watch?v=')[1].split('&')[0];
-      } else if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
-      }
+      if (url.includes('watch?v=')) videoId = url.split('watch?v=')[1].split('&')[0];
+      else if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
+      
       if (videoId) {
-        document.getElementById('trailerFrame').src =
-          `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+        document.getElementById('trailerFrame').src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
         document.getElementById('trailerModal').classList.add('active');
       }
     }
@@ -609,15 +586,9 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
       document.getElementById('trailerFrame').src = "";
     }
 
-    document.getElementById('trailerModal').addEventListener('click', function(e) {
-      if (e.target === this) closeTrailer();
-    });
+    document.getElementById('trailerModal').onclick = function(e) { if (e.target === this) closeTrailer(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTrailer(); });
 
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') closeTrailer();
-    });
-
-    // Search
     const searchInput = document.getElementById("searchInput");
     const searchResults = document.getElementById("searchResults");
     let searchTimeout = null;
@@ -625,11 +596,7 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
     searchInput.addEventListener("input", function() {
       const query = searchInput.value.trim();
       if (searchTimeout) clearTimeout(searchTimeout);
-      if (query.length === 0) {
-        searchResults.style.display = "none";
-        searchResults.innerHTML = "";
-        return;
-      }
+      if (query.length === 0) { searchResults.style.display = "none"; return; }
       searchTimeout = setTimeout(() => {
         fetch(`search_movies.php?ajax_search=${encodeURIComponent(query)}`)
           .then(res => res.json())
@@ -642,48 +609,29 @@ $coming_soon_results = getAvailableMovies($conn, 'Coming Soon');
                      onclick="window.location.href='movie.php?movie_id=${movie.Movie_ID}'">
                      <img src='/${movie.MoviePoster}' style='width:35px; height:48px; object-fit:cover; margin-right:10px; border-radius:4px;'>
                      <span style='font-weight:500;'>${movie.MovieName}</span>
-                </div>`
-              ).join("");
+                </div>`).join("");
             }
-            searchResults.style.display = "block";
-          })
-          .catch(() => {
-            searchResults.innerHTML = "<div style='padding:15px; color:#888;'>Unable to search at the moment</div>";
             searchResults.style.display = "block";
           });
       }, 300);
     });
 
-    document.addEventListener("click", function(e) {
-      if (!searchResults.contains(e.target) && e.target !== searchInput) {
-        searchResults.style.display = "none";
-      }
-    });
-  </script>
-<script>
-    // ── Hide header on scroll down, show on scroll up ──
+    document.addEventListener("click", e => { if (!searchResults.contains(e.target) && e.target !== searchInput) searchResults.style.display = "none"; });
+
     (function() {
         const header = document.querySelector('header');
         let lastY = window.scrollY, ticking = false;
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', () => {
             if (!ticking) {
-                requestAnimationFrame(function() {
-                    const currentY = window.scrollY;
-                    if (currentY > lastY && currentY > 80) header.classList.add('header-hidden');
+                requestAnimationFrame(() => {
+                    if (window.scrollY > lastY && window.scrollY > 80) header.classList.add('header-hidden');
                     else header.classList.remove('header-hidden');
-                    lastY = currentY; ticking = false;
+                    lastY = window.scrollY; ticking = false;
                 });
                 ticking = true;
             }
         }, { passive: true });
     })();
-
-    // Secret admin access: Ctrl + Shift + A
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-            window.location.href = 'Admin/admin_login.php';
-        }
-    });
-</script>
+  </script>
 </body>
 </html>
